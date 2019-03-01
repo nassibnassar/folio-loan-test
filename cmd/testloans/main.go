@@ -10,12 +10,13 @@ import (
 )
 
 func main() {
+	limit := os.Args[1]
 	token, err := login()
 	if err != nil {
 		printError(err)
 		return
 	}
-	err = retrieveLoans(token)
+	err = retrieveLoans(token, limit)
 	if err != nil {
 		printError(err)
 		return
@@ -53,11 +54,13 @@ func login() (string, error) {
 	return resp.Header["X-Okapi-Token"][0], nil
 }
 
-func retrieveLoans(token string) error {
+func retrieveLoans(token string, limit string) error {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET",
-		"http://localhost:9130/loan-storage/loans?limit=10000&offset=0",
+		"http://localhost:9130/loan-storage/loans?limit="+
+			limit+
+			"&offset=0",
 		nil)
 	if err != nil {
 		return err
@@ -77,6 +80,9 @@ func retrieveLoans(token string) error {
 		return err
 	}
 	fmt.Printf("%s\n", body)
+
+	fmt.Println("Status code:", resp.StatusCode,
+		http.StatusText(resp.StatusCode))
 
 	return nil
 }
