@@ -11,16 +11,26 @@ import (
 
 func main() {
 	limit := os.Args[1]
+
+	err := run(limit)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s: %s\n", os.Args[0], err)
+		os.Exit(1)
+	}
+}
+
+func run(limit string) error {
 	token, err := login()
 	if err != nil {
-		printError(err)
-		return
+		return err
 	}
+
 	err = retrieveLoans(token, limit)
 	if err != nil {
-		printError(err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func login() (string, error) {
@@ -57,11 +67,10 @@ func login() (string, error) {
 func retrieveLoans(token string, limit string) error {
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET",
-		"http://localhost:9130/loan-storage/loans?limit="+
-			limit+
-			"&offset=0",
-		nil)
+	url := "http://localhost:9130/loan-storage/loans?limit=" +
+		limit +
+		"&offset=0"
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -80,13 +89,9 @@ func retrieveLoans(token string, limit string) error {
 		return err
 	}
 	fmt.Printf("%s\n", body)
-
+	fmt.Println("URL:", url)
 	fmt.Println("Status code:", resp.StatusCode,
 		http.StatusText(resp.StatusCode))
 
 	return nil
-}
-
-func printError(err error) {
-	fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 }
